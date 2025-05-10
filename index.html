@@ -14,9 +14,8 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #f7f7f7;
-      color: #333;
-      transition: background 0.3s, color 0.3s;
+      background: #121212; /* Koyu arka plan */
+      color: #f1f5f9; /* Beyaz yazılar */
     }
 
     .container {
@@ -25,13 +24,8 @@
       padding: 40px;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 600px;
+      max-width: 800px;
       text-align: center;
-      transition: transform 0.3s ease;
-    }
-
-    .container:hover {
-      transform: scale(1.02);
     }
 
     h1 {
@@ -84,9 +78,30 @@
       color: #2a9d8f;
     }
 
-    .definition {
+    .definition, .example, .synonyms, .antonyms {
       margin-top: 20px;
       font-size: 18px;
+    }
+
+    .definition-headline, .example-headline, .synonyms-headline, .antonyms-headline {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .definition-headline {
+      color: #ff6f61; /* Definition başlığı kırmızı */
+    }
+
+    .example-headline {
+      color: #ffbf47; /* Example başlığı sarı */
+    }
+
+    .synonyms-headline {
+      color: #61a3ff; /* Synonyms başlığı mavi */
+    }
+
+    .antonyms-headline {
+      color: #ff6347; /* Antonyms başlığı turuncu */
     }
 
     .example {
@@ -94,29 +109,15 @@
       color: #555;
     }
 
-    .night-mode {
-      background: #121212;
-      color: #f1f5f9;
+    .synonyms-list, .antonyms-list {
+      font-size: 16px;
+      list-style-type: none;
+      padding: 0;
     }
 
-    .night-mode button {
-      background-color: #ff6f61;
-    }
-
-    .night-mode input {
-      border-color: #ff6f61;
-    }
-
-    .night-mode .message {
-      color: #f1f5f9;
-    }
-
-    .night-mode .definition {
-      color: #f1f5f9;
-    }
-
-    .night-mode .error {
-      color: #ff6f61;
+    .synonyms-list li, .antonyms-list li {
+      margin-bottom: 5px;
+      color: #2a9d8f;
     }
 
     .speaker-icon {
@@ -129,6 +130,7 @@
     .speaker-icon:hover {
       color: #ff6f61;
     }
+
   </style>
 </head>
 <body>
@@ -136,29 +138,26 @@
     <h1 id="wordHeader">IELTS English Dictionary</h1>
     <input type="text" id="wordInput" placeholder="Enter a word...">
     <button onclick="getWord()">Search</button>
-    <button onclick="toggleNightMode()">Toggle Night Mode</button>
     <div id="result"></div>
     <div id="definition"></div>
+    <div id="synonyms"></div>
+    <div id="antonyms"></div>
   </div>
 
   <script>
-    let isNightMode = false;
-
-    // Toggle Night Mode
-    function toggleNightMode() {
-      isNightMode = !isNightMode;
-      document.body.classList.toggle('night-mode', isNightMode);
-    }
-
     async function getWord() {
       const word = document.getElementById("wordInput").value.trim().toLowerCase();
       const resultDiv = document.getElementById("result");
       const definitionDiv = document.getElementById("definition");
+      const synonymsDiv = document.getElementById("synonyms");
+      const antonymsDiv = document.getElementById("antonyms");
       const wordHeader = document.getElementById("wordHeader");
 
       if (!word) {
         resultDiv.innerHTML = "<p class='error message'>Please enter a word.</p>";
         definitionDiv.innerHTML = "";
+        synonymsDiv.innerHTML = "";
+        antonymsDiv.innerHTML = "";
         return;
       }
 
@@ -175,29 +174,67 @@
           resultDiv.innerHTML = `<p class='success message'>Word found: <strong>${word}</strong></p>`;
 
           let definitionsHTML = '';
-          // Loop through all definitions if there are multiple meanings
           data[0].meanings.forEach(meaning => {
             definitionsHTML += `
-              <p><strong>Part of Speech:</strong> ${meaning.partOfSpeech}</p>
-              <p><strong>Definition:</strong> ${meaning.definitions[0].definition}</p>
-              <p><strong>Example Sentence:</strong> <span class="example">${meaning.definitions[0].example || "No example sentence available."}</span></p>
+              <p class="definition-headline">Part of Speech: ${meaning.partOfSpeech}</p>
+              <p class="definition-headline">Definition:</p>
+              <p>${meaning.definitions[0].definition}</p>
+              <p class="example-headline">Example Sentence:</p>
+              <p class="example">${meaning.definitions[0].example || "No example sentence available."}</p>
             `;
           });
-
           definitionDiv.innerHTML = definitionsHTML;
+
+          // Show synonyms if available
+          if (data[0].meanings[0].synonyms) {
+            let synonymsHTML = '<div class="synonyms"><p class="synonyms-headline">Synonyms:</p><ul class="synonyms-list">';
+            data[0].meanings[0].synonyms.forEach(synonym => {
+              synonymsHTML += `<li>${synonym}</li>`;
+            });
+            synonymsHTML += '</ul></div>';
+            synonymsDiv.innerHTML = synonymsHTML;
+          } else {
+            synonymsDiv.innerHTML = "";
+          }
+
+          // Show antonyms if available
+          if (data[0].meanings[0].antonyms) {
+            let antonymsHTML = '<div class="antonyms"><p class="antonyms-headline">Antonyms:</p><ul class="antonyms-list">';
+            data[0].meanings[0].antonyms.forEach(antonym => {
+              antonymsHTML += `<li>${antonym}</li>`;
+            });
+            antonymsHTML += '</ul></div>';
+            antonymsDiv.innerHTML = antonymsHTML;
+          } else {
+            antonymsDiv.innerHTML = "";
+          }
         } else {
           resultDiv.innerHTML = "<p class='error message'>Word not found. Please try again.</p>";
           definitionDiv.innerHTML = "";
+          synonymsDiv.innerHTML = "";
+          antonymsDiv.innerHTML = "";
         }
       } catch (error) {
         resultDiv.innerHTML = "<p class='error message'>An error occurred. Please try again.</p>";
         definitionDiv.innerHTML = "";
+        synonymsDiv.innerHTML = "";
+        antonymsDiv.innerHTML = "";
       }
     }
 
-    // Function to speak the word
+    // Function to speak the word with the chosen accent
     function speakWord(word) {
       const utterance = new SpeechSynthesisUtterance(word);
+      const voices = speechSynthesis.getVoices();
+      const americanVoice = voices.find(voice => voice.name.includes("Google US English"));
+      const britishVoice = voices.find(voice => voice.name.includes("Google UK English"));
+
+      // Use American accent by default
+      utterance.voice = americanVoice || voices[0]; // Fallback to the first available voice if American voice isn't found.
+      
+      // Change to British voice if desired, can be modified by user preference
+      utterance.voice = britishVoice || utterance.voice;
+
       speechSynthesis.speak(utterance);
     }
   </script>
