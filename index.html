@@ -1,186 +1,150 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>İngilizce Kelime Sözlüğü</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IELTS İngilizce Sözlük</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    :root {
-      --main-bg: #f4f6f9;
-      --card-bg: #ffffff;
-      --text: #222;
-      --primary: #4CAF50;
-    }
-
-    body.dark {
-      --main-bg: #1e1e1e;
-      --card-bg: #2c2c2c;
-      --text: #ddd;
-      --primary: #90ee90;
-    }
-
     body {
       font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      color: #212529;
       margin: 0;
       padding: 20px;
-      background-color: var(--main-bg);
-      color: var(--text);
-      transition: 0.3s;
     }
 
     .container {
       max-width: 600px;
       margin: auto;
-      background: var(--card-bg);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      background-color: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      color: #2a9d8f;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     input {
       width: 70%;
-      padding: 12px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
 
     button {
-      padding: 12px;
-      font-size: 16px;
-      background-color: var(--primary);
+      background-color: #2a9d8f;
       color: white;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
-      margin-left: 8px;
     }
 
     button:hover {
-      background-color: #3e8e41;
+      opacity: 0.9;
     }
 
-    .theme-toggle {
-      float: right;
-      margin-top: -40px;
-      cursor: pointer;
-    }
-
-    #result, #history {
+    #result, #suggestions {
       margin-top: 20px;
     }
 
-    .loading {
-      font-style: italic;
-      color: gray;
-    }
-
-    audio {
-      margin-top: 10px;
-    }
-
-    .synonyms span {
-      display: inline-block;
+    .suggestions span {
       background: #e0e0e0;
-      color: #333;
       padding: 4px 8px;
-      border-radius: 5px;
-      margin: 4px;
+      border-radius: 4px;
+      margin: 3px;
+      display: inline-block;
     }
 
-    body.dark .synonyms span {
-      background: #444;
-      color: #ddd;
-    }
-
-    @media (max-width: 600px) {
-      input {
-        width: 100%;
-        margin-bottom: 10px;
-      }
-      button {
-        width: 100%;
-        margin-left: 0;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="theme-toggle">
-      <button onclick="toggleTheme()">🌙 / ☀️</button>
-    </div>
-    <h1>İngilizce Sözlük (IELTS Destekli)</h1>
-    <input type="text" id="wordInput" placeholder="Bir kelime gir...">
+    <h1>IELTS Sözlük</h1>
+    <input type="text" id="wordInput" placeholder="Bir kelime yazın...">
     <button onclick="getWord()">Ara</button>
     <div id="result"></div>
-    <div id="history"></div>
+    <div id="suggestions"></div>
   </div>
 
   <script>
-    let historyList = [];
+    // Yaygın kelimeler listesi
+    const dictionary = ["accommodate", "abandon", "abbreviation", "absence", "academic", "access", "accompany", "achieve", "acquire", "adapt", "addition", "advance", "analysis", "approach", "architect", "arrange", "assertive", "atmosphere", "benefit", "category", "coherent", "comprehend", "contribute", "evaluate", "explore", "familiar", "function", "genuine", "horizon", "illustrate", "imagine", "influence", "innovate", "interpret", "investigate", "isolated", "management", "minimum", "necessary", "obstacle", "objective", "participate", "positive", "response", "significant", "tolerate"];
 
-    function toggleTheme() {
-      document.body.classList.toggle('dark');
+    // Levenshtein Mesafesi (yazım hatalarını düzeltmek için)
+    function levenshtein(a, b) {
+      var tmp;
+      var i, j;
+      var alen = a.length;
+      var blen = b.length;
+      var row = Array(alen);
+      // Eğer bir kelime boşsa, diğerinin tamamı uzunluk kadar mesafededir.
+      if (alen === 0) { return blen; }
+      if (blen === 0) { return alen; }
+      for (i = 0; i < alen; i++) { row[i] = i; }
+
+      for (j = 0; j < blen; j++) {
+        tmp = j;
+        for (i = 0; i < alen; i++) {
+          var cost = (a[i] === b[j]) ? 0 : 1;
+          var current = Math.min(row[i] + cost, Math.min(row[i + 1] + 1, tmp + 1));
+          tmp = row[i];
+          row[i] = current;
+        }
+      }
+      return row[alen - 1];
     }
 
+    // Kelimenin doğruluğunu kontrol et ve öneriler sun
     function getWord() {
-      const word = document.getElementById('wordInput').value.trim();
-      const result = document.getElementById('result');
+      const word = document.getElementById("wordInput").value.trim().toLowerCase();
+      const resultDiv = document.getElementById("result");
+      const suggestionsDiv = document.getElementById("suggestions");
+      
       if (!word) {
-        result.innerHTML = "Lütfen bir kelime girin.";
+        resultDiv.innerHTML = "Lütfen bir kelime girin.";
         return;
       }
 
-      result.innerHTML = '<p class="loading">Yükleniyor...</p>';
+      // API'yi burada kullanmıyoruz, sadece yanlış kelimeler için öneri gösteriyoruz.
+      const closestWords = getClosestWords(word);
 
-      fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.title === "No Definitions Found") {
-            result.innerHTML = "Kelime bulunamadı.";
-            return;
-          }
-
-          const def = data[0].meanings[0].definitions[0].definition || "Tanım yok.";
-          const ex = data[0].meanings[0].definitions[0].example || "Örnek yok.";
-          const synonyms = data[0].meanings[0].definitions[0].synonyms || [];
-          const audio = data[0].phonetics[0]?.audio;
-
-          let synHtml = '';
-          if (synonyms.length > 0) {
-            synHtml = `<p><strong>Eş Anlamlılar:</strong> <div class="synonyms">${synonyms.slice(0, 5).map(s => `<span>${s}</span>`).join('')}</div></p>`;
-          }
-
-          result.innerHTML = `
-            <h2>${word}</h2>
-            <p><strong>Anlam:</strong> ${def}</p>
-            <p><strong>Örnek:</strong> ${ex}</p>
-            ${synHtml}
-            ${audio ? `<audio controls src="${audio}"></audio>` : ''}
-          `;
-
-          updateHistory(word);
-        })
-        .catch(err => {
-          result.innerHTML = "Bir hata oluştu.";
-          console.error(err);
-        });
+      if (closestWords.length > 0) {
+        resultDiv.innerHTML = `<p><strong>Yazım hatası tespit edildi! Belki şunları demek istediniz?</strong></p>`;
+        suggestionsDiv.innerHTML = closestWords.map(w => `<span onclick="setWord('${w}')">${w}</span>`).join('');
+      } else {
+        resultDiv.innerHTML = "Kelime bulundu!";
+        suggestionsDiv.innerHTML = "";
+      }
     }
 
-    function updateHistory(word) {
-      if (!historyList.includes(word)) {
-        historyList.unshift(word);
-        if (historyList.length > 5) historyList.pop();
-      }
+    // Yazım hatalı kelimenin en yakın 3 eşleşmesini al
+    function getClosestWords(word) {
+      let closestWords = [];
+      let distances = [];
 
-      const historyDiv = document.getElementById('history');
-      historyDiv.innerHTML = "<h3>Geçmiş Aramalar:</h3><ul>" + historyList.map(w => `<li>${w}</li>`).join('') + "</ul>";
+      dictionary.forEach(dictWord => {
+        const distance = levenshtein(word, dictWord);
+        distances.push({ word: dictWord, distance: distance });
+      });
+
+      // Mesafeyi küçükten büyüğe sıralayıp, en yakın 3 öneriyi al
+      distances.sort((a, b) => a.distance - b.distance);
+      closestWords = distances.slice(0, 3).map(d => d.word);
+
+      return closestWords;
+    }
+
+    // Önerilen kelimeleri kullanıcı seçerse, inputa yaz
+    function setWord(word) {
+      document.getElementById("wordInput").value = word;
+      getWord();
     }
   </script>
 </body>
