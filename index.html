@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IELTS İngilizce Sözlük</title>
+  <title>IELTS English Dictionary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, #6e7dff, #a8c0ff);
+      font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
       color: #333;
@@ -15,7 +15,8 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background-size: cover;
+      background: #f1f5f9;
+      transition: background 0.3s, color 0.3s;
     }
 
     .container {
@@ -84,35 +85,95 @@
     .success {
       color: #2a9d8f;
     }
+
+    .definition {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .example {
+      font-style: italic;
+      color: #555;
+    }
+
+    .night-mode {
+      background: #121212;
+      color: #f1f5f9;
+    }
+
+    .night-mode button {
+      background-color: #ff6f61;
+    }
+
+    .night-mode input {
+      border-color: #ff6f61;
+    }
+
+    .night-mode .message {
+      color: #f1f5f9;
+    }
+
+    .night-mode .error {
+      color: #ff6f61;
+    }
+
+    .night-mode .success {
+      color: #f1f5f9;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>IELTS İngilizce Sözlük</h1>
-    <input type="text" id="wordInput" placeholder="Bir kelime yazın...">
-    <button onclick="getWord()">Ara</button>
+    <h1>IELTS English Dictionary</h1>
+    <input type="text" id="wordInput" placeholder="Enter a word...">
+    <button onclick="getWord()">Search</button>
+    <button onclick="toggleNightMode()">Toggle Night Mode</button>
     <div id="result"></div>
+    <div id="definition"></div>
   </div>
 
   <script>
-    // Yaygın kelimeler listesi
-    const dictionary = ["accommodate", "abandon", "abbreviation", "absence", "academic", "access", "accompany", "achieve", "acquire", "adapt", "addition", "advance", "analysis", "approach", "architect", "arrange", "assertive", "atmosphere", "benefit", "category", "coherent", "comprehend", "contribute", "evaluate", "explore", "familiar", "function", "genuine", "horizon", "illustrate", "imagine", "influence", "innovate", "interpret", "investigate", "isolated", "management", "minimum", "necessary", "obstacle", "objective", "participate", "positive", "response", "significant", "tolerate"];
+    let isNightMode = false;
 
-    // Kelimeyi doğrulama fonksiyonu
-    function getWord() {
+    // Toggle Night Mode
+    function toggleNightMode() {
+      isNightMode = !isNightMode;
+      document.body.classList.toggle('night-mode', isNightMode);
+    }
+
+    async function getWord() {
       const word = document.getElementById("wordInput").value.trim().toLowerCase();
       const resultDiv = document.getElementById("result");
+      const definitionDiv = document.getElementById("definition");
 
       if (!word) {
-        resultDiv.innerHTML = "<p class='error message'>Lütfen bir kelime girin.</p>";
+        resultDiv.innerHTML = "<p class='error message'>Please enter a word.</p>";
+        definitionDiv.innerHTML = "";
         return;
       }
 
-      // Kelimeyi doğrulama işlemi
-      if (dictionary.includes(word)) {
-        resultDiv.innerHTML = "<p class='success message'>Kelime bulundu: <strong>" + word + "</strong></p>";
-      } else {
-        resultDiv.innerHTML = "<p class='error message'>Kelime bulunamadı. Lütfen tekrar deneyin.</p>";
+      // API URL to fetch word details
+      const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        // If the word is found
+        if (data.title !== "No Definitions Found") {
+          resultDiv.innerHTML = `<p class='success message'>Word found: <strong>${word}</strong></p>`;
+          definitionDiv.innerHTML = `
+            <p><strong>Definition:</strong> ${data[0].meanings[0].definitions[0].definition}</p>
+            <p><strong>Example Sentence:</strong> <span class="example">${data[0].meanings[0].definitions[0].example || "No example sentence available."}</span></p>
+          `;
+        } else {
+          resultDiv.innerHTML = "<p class='error message'>Word not found. Please try again.</p>";
+          definitionDiv.innerHTML = "";
+        }
+      } catch (error) {
+        resultDiv.innerHTML = "<p class='error message'>An error occurred. Please try again.</p>";
+        definitionDiv.innerHTML = "";
       }
     }
   </script>
