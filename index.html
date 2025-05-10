@@ -2,73 +2,185 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Kelime Anlamı</title>
+  <title>İngilizce Kelime Sözlüğü</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    :root {
+      --main-bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #222;
+      --primary: #4CAF50;
+    }
+
+    body.dark {
+      --main-bg: #1e1e1e;
+      --card-bg: #2c2c2c;
+      --text: #ddd;
+      --primary: #90ee90;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
-      text-align: center;
-      padding: 50px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-    }
-    #result {
-      margin-top: 20px;
-      background: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
       padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background-color: var(--main-bg);
+      color: var(--text);
+      transition: 0.3s;
     }
-    button:hover {
-      cursor: pointer;
-      background-color: #4CAF50;
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 70%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+      background-color: var(--primary);
       color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    button:hover {
+      background-color: #3e8e41;
+    }
+
+    .theme-toggle {
+      float: right;
+      margin-top: -40px;
+      cursor: pointer;
+    }
+
+    #result, #history {
+      margin-top: 20px;
+    }
+
+    .loading {
+      font-style: italic;
+      color: gray;
+    }
+
+    audio {
+      margin-top: 10px;
+    }
+
+    .synonyms span {
+      display: inline-block;
+      background: #e0e0e0;
+      color: #333;
+      padding: 4px 8px;
+      border-radius: 5px;
+      margin: 4px;
+    }
+
+    body.dark .synonyms span {
+      background: #444;
+      color: #ddd;
+    }
+
+    @media (max-width: 600px) {
+      input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 100%;
+        margin-left: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>İngilizce Kelime Anlamı Bul</h1>
-  <input type="text" id="wordInput" placeholder="kelime yaz">
-  <button onclick="getMeaning()">Ara</button>
-  <div id="result"></div>
+  <div class="container">
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">🌙 / ☀️</button>
+    </div>
+    <h1>İngilizce Sözlük (IELTS Destekli)</h1>
+    <input type="text" id="wordInput" placeholder="Bir kelime gir...">
+    <button onclick="getWord()">Ara</button>
+    <div id="result"></div>
+    <div id="history"></div>
+  </div>
 
   <script>
-    function getMeaning() {
-      const word = document.getElementById("wordInput").value;
-      const resultDiv = document.getElementById("result");
+    let historyList = [];
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+
+    function getWord() {
+      const word = document.getElementById('wordInput').value.trim();
+      const result = document.getElementById('result');
       if (!word) {
-        resultDiv.innerHTML = "Lütfen bir kelime girin.";
+        result.innerHTML = "Lütfen bir kelime girin.";
         return;
       }
+
+      result.innerHTML = '<p class="loading">Yükleniyor...</p>';
 
       fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
         .then(res => res.json())
         .then(data => {
           if (data.title === "No Definitions Found") {
-            resultDiv.innerHTML = "Kelime bulunamadı.";
+            result.innerHTML = "Kelime bulunamadı.";
             return;
           }
-          const meaning = data[0].meanings[0].definitions[0].definition;
-          const example = data[0].meanings[0].definitions[0].example || "Örnek bulunamadı.";
+
+          const def = data[0].meanings[0].definitions[0].definition || "Tanım yok.";
+          const ex = data[0].meanings[0].definitions[0].example || "Örnek yok.";
+          const synonyms = data[0].meanings[0].definitions[0].synonyms || [];
           const audio = data[0].phonetics[0]?.audio;
 
-          resultDiv.innerHTML = `
+          let synHtml = '';
+          if (synonyms.length > 0) {
+            synHtml = `<p><strong>Eş Anlamlılar:</strong> <div class="synonyms">${synonyms.slice(0, 5).map(s => `<span>${s}</span>`).join('')}</div></p>`;
+          }
+
+          result.innerHTML = `
             <h2>${word}</h2>
-            <p><strong>Anlam:</strong> ${meaning}</p>
-            <p><strong>Örnek:</strong> ${example}</p>
-            ${audio ? `<audio controls src="${audio}"></audio>` : ""}
+            <p><strong>Anlam:</strong> ${def}</p>
+            <p><strong>Örnek:</strong> ${ex}</p>
+            ${synHtml}
+            ${audio ? `<audio controls src="${audio}"></audio>` : ''}
           `;
+
+          updateHistory(word);
         })
         .catch(err => {
-          resultDiv.innerHTML = "Bir hata oluştu.";
+          result.innerHTML = "Bir hata oluştu.";
           console.error(err);
         });
+    }
+
+    function updateHistory(word) {
+      if (!historyList.includes(word)) {
+        historyList.unshift(word);
+        if (historyList.length > 5) historyList.pop();
+      }
+
+      const historyDiv = document.getElementById('history');
+      historyDiv.innerHTML = "<h3>Geçmiş Aramalar:</h3><ul>" + historyList.map(w => `<li>${w}</li>`).join('') + "</ul>";
     }
   </script>
 </body>
