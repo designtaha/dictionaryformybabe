@@ -111,6 +111,10 @@
       color: #f1f5f9;
     }
 
+    .night-mode .definition {
+      color: #f1f5f9;
+    }
+
     .night-mode .error {
       color: #ff6f61;
     }
@@ -156,10 +160,18 @@
         // If the word is found
         if (data.title !== "No Definitions Found") {
           resultDiv.innerHTML = `<p class='success message'>Word found: <strong>${word}</strong></p>`;
-          definitionDiv.innerHTML = `
-            <p><strong>Definition:</strong> ${data[0].meanings[0].definitions[0].definition}</p>
-            <p><strong>Example Sentence:</strong> <span class="example">${data[0].meanings[0].definitions[0].example || "No example sentence available."}</span></p>
-          `;
+
+          let definitionsHTML = '';
+          // Loop through all definitions if there are multiple meanings
+          data[0].meanings.forEach(meaning => {
+            definitionsHTML += `
+              <p><strong>Part of Speech:</strong> ${meaning.partOfSpeech}</p>
+              <p><strong>Definition:</strong> ${meaning.definitions[0].definition}</p>
+              <p><strong>Example Sentence:</strong> <span class="example">${meaning.definitions[0].example || "No example sentence available."}</span></p>
+            `;
+          });
+
+          definitionDiv.innerHTML = definitionsHTML;
         } else {
           resultDiv.innerHTML = "<p class='error message'>Word not found. Please try again.</p>";
           definitionDiv.innerHTML = "";
