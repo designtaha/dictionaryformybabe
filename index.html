@@ -198,6 +198,16 @@
       antonymsDiv.innerHTML = antonymsHTML;
 
       resultDiv.innerHTML = `<p class='message'>Results for "${word}":</p>`;
+
+      // Sesli okuma özelliği
+      const speakButton = document.createElement('span');
+      speakButton.classList.add('speaker-icon');
+      speakButton.innerHTML = '🔊';
+      speakButton.onclick = () => {
+        const utterance = new SpeechSynthesisUtterance(word);
+        speechSynthesis.speak(utterance);
+      };
+      resultDiv.appendChild(speakButton);
     }
   </script>
 </body>
