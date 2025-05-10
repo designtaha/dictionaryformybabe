@@ -14,7 +14,7 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #e0f7fa;
+      background: #f7f7f7;
       color: #333;
       transition: background 0.3s, color 0.3s;
     }
@@ -25,7 +25,7 @@
       padding: 40px;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 550px;
+      max-width: 600px;
       text-align: center;
       transition: transform 0.3s ease;
     }
@@ -36,9 +36,9 @@
 
     h1 {
       color: #2a9d8f;
-      font-size: 36px;
+      font-size: 48px;
       margin-bottom: 20px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     input {
@@ -75,12 +75,12 @@
 
     #result {
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .message {
       font-weight: bold;
-      font-size: 20px;
+      font-size: 24px;
       color: #2a9d8f;
     }
 
@@ -118,11 +118,22 @@
     .night-mode .error {
       color: #ff6f61;
     }
+
+    .speaker-icon {
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 30px;
+      color: #2a9d8f;
+    }
+
+    .speaker-icon:hover {
+      color: #ff6f61;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>IELTS English Dictionary</h1>
+    <h1 id="wordHeader">IELTS English Dictionary</h1>
     <input type="text" id="wordInput" placeholder="Enter a word...">
     <button onclick="getWord()">Search</button>
     <button onclick="toggleNightMode()">Toggle Night Mode</button>
@@ -143,6 +154,7 @@
       const word = document.getElementById("wordInput").value.trim().toLowerCase();
       const resultDiv = document.getElementById("result");
       const definitionDiv = document.getElementById("definition");
+      const wordHeader = document.getElementById("wordHeader");
 
       if (!word) {
         resultDiv.innerHTML = "<p class='error message'>Please enter a word.</p>";
@@ -159,6 +171,7 @@
 
         // If the word is found
         if (data.title !== "No Definitions Found") {
+          wordHeader.innerHTML = `${word} <span class="speaker-icon" onclick="speakWord('${word}')">&#127926;</span>`;
           resultDiv.innerHTML = `<p class='success message'>Word found: <strong>${word}</strong></p>`;
 
           let definitionsHTML = '';
@@ -180,6 +193,12 @@
         resultDiv.innerHTML = "<p class='error message'>An error occurred. Please try again.</p>";
         definitionDiv.innerHTML = "";
       }
+    }
+
+    // Function to speak the word
+    function speakWord(word) {
+      const utterance = new SpeechSynthesisUtterance(word);
+      speechSynthesis.speak(utterance);
     }
   </script>
 </body>
