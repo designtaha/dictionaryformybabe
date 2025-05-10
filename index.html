@@ -10,12 +10,12 @@
       font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
-      color: #333;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background: #f1f5f9;
+      background: #e0f7fa;
+      color: #333;
       transition: background 0.3s, color 0.3s;
     }
 
@@ -23,16 +23,22 @@
       background: rgba(255, 255, 255, 0.9);
       border-radius: 10px;
       padding: 40px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 500px;
+      max-width: 550px;
       text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+      transform: scale(1.02);
     }
 
     h1 {
       color: #2a9d8f;
-      font-size: 32px;
+      font-size: 36px;
       margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     input {
@@ -59,17 +65,17 @@
       border-radius: 6px;
       cursor: pointer;
       width: 80%;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s, transform 0.2s ease;
     }
 
     button:hover {
       background-color: #ff6f61;
+      transform: translateY(-2px);
     }
 
     #result {
       margin-top: 20px;
       font-size: 18px;
-      color: #333;
     }
 
     .message {
@@ -78,18 +84,9 @@
       color: #2a9d8f;
     }
 
-    .error {
-      color: #ff6f61;
-    }
-
-    .success {
-      color: #2a9d8f;
-    }
-
     .definition {
       margin-top: 20px;
       font-size: 18px;
-      color: #333;
     }
 
     .example {
@@ -116,10 +113,6 @@
 
     .night-mode .error {
       color: #ff6f61;
-    }
-
-    .night-mode .success {
-      color: #f1f5f9;
     }
   </style>
 </head>
